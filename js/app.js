@@ -47,6 +47,37 @@ Enemy.prototype.reset = function() {
     this.y = this.initial_y;
 };
 
+// Rocks our player must avoid
+var Rock = function(row) {
+    // Position for Rock
+    this.top_offset = 66;
+    this.side_offset = 6;
+    // width & height
+    this.width = 88;
+    this.height = 88;
+    // Variables to manage rock location
+    this.x = randomNumber(404);
+    this.y = (row * 83) - this.top_offset + 50;
+    // The image/sprite for our enemies, this uses
+    // a helper we've provided to easily load images
+    this.sprite = 'images/Rock.png';
+};
+
+Rock.prototype = Object.create(Enemy.prototype);
+
+// Update the rock's position, required method for game
+// Parameter: dt, a time delta between ticks
+Rock.prototype.update = function(dt) {
+    // You should multiply any movement by the dt parameter
+    // which will ensure the game runs at the same speed for
+    // all computers.
+};
+
+// Reset the rock position to reset the game.
+Rock.prototype.reset = function() {
+    this.x = randomNumber(404);
+};
+
 // Player class
 var Player = function() {
     // Image offset
@@ -111,6 +142,8 @@ var allEnemies = [];
 allEnemies.push(new Enemy(1));
 allEnemies.push(new Enemy(2));
 allEnemies.push(new Enemy(3));
+allEnemies.push(new Rock(4));
+allEnemies.push(new Rock(0));
 setTimeout(function() {
     allEnemies.push(new Enemy(1));
     allEnemies.push(new Enemy(2));
@@ -136,7 +169,7 @@ document.addEventListener('keyup', function(e) {
 
 // This function is used to get the random speed for the enemy.
 function randomSpeed() {
-    return randomNumber(100) + 20;
+    return randomNumber(200) + 20;
 }
 
 // This function is used to get the random number for the
