@@ -1,3 +1,16 @@
+var Game = function() {
+    this.active = true;
+}
+
+Game.prototype.stop = function() {
+    this.active = false;
+}
+
+Game.prototype.start = function() {
+    this.active = true;
+}
+
+
 // Enemies our player must avoid
 var Enemy = function(row) {
     // Variables applied to each of our instances go here,
@@ -24,6 +37,9 @@ var Enemy = function(row) {
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
 Enemy.prototype.update = function(dt) {
+    if(!game.active) {
+        return;
+    }
     // You should multiply any movement by the dt parameter
     // which will ensure the game runs at the same speed for
     // all computers.
@@ -114,6 +130,9 @@ Player.prototype.render = function() {
 Player.prototype.handleInput = function(control) {
     if(control){
         switch (control) {
+            case 'space':
+                restartGame();
+                break;
             case 'left':
                 this.x = (this.x - this.step_x >= 0 ? this.x - this.step_x : this.x);
                 break;
@@ -128,6 +147,10 @@ Player.prototype.handleInput = function(control) {
                 break;
         }
     }
+    // Reset the game if player reaches the water
+    if(this.y === -10){
+        endGame(1);
+    }
 };
 
 // Reset the player position to reset the game.
@@ -137,6 +160,8 @@ Player.prototype.reset = function() {
 };
 
 // Now instantiate your objects.
+// Initiate game
+var game = new Game();
 // Place all enemy objects in an array called allEnemies
 var allEnemies = [];
 allEnemies.push(new Enemy(1));
@@ -158,6 +183,7 @@ var player = new Player();
 // Player.handleInput() method. You don't need to modify this.
 document.addEventListener('keyup', function(e) {
     var allowedKeys = {
+        32: 'space',
         37: 'left',
         38: 'up',
         39: 'right',
@@ -176,4 +202,46 @@ function randomSpeed() {
 // provided maximum number
 function randomNumber(max_number) {
     return Math.floor(Math.random() * max_number);
+}
+
+// This function is called when the player reaches the water.
+// It will reset the player position as well as all enemies position.
+function restartGame() {
+    if(!game.active){
+        game.start();
+        player.reset();
+        allEnemies.forEach(function(enemy) {
+            enemy.reset();
+        });
+        ctx.clearRect(0, 0, ctx.canvas.width, 50);
+    }
+}
+
+// This function is called when the player reaches the water.
+// It will freeze the player position as well as all enemies position.
+function endGame(status) {
+    game.stop();
+    if(status === 1){
+        drawTitle(ctx, "Cogrates! You win. Play again.", ctx.canvas.width/2 , 32);
+    }else {
+        drawTitle(ctx, "Opps! You lost the game. Try again.", ctx.canvas.width/2 , 32);
+    }
+    drawInfo(ctx, "Enter 'SPACE' to restart the game.", ctx.canvas.width/2 , 48);
+}
+
+function drawTitle(ctx, text, x, y){
+    ctx.font = "24pt Impact";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fff";
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 3;
+    ctx.fillText(text, x , y);
+    ctx.strokeText(text, x, y);
+}
+
+function drawInfo(ctx, text, x, y){
+    ctx.font = "12pt Arial";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#000";
+    ctx.fillText(text, x , y);
 }
