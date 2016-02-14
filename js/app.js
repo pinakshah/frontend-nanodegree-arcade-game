@@ -2,11 +2,18 @@
 var Enemy = function(row) {
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
+    // Image offset
+    this.top_offset = 76;
+    this.side_offset = 2;
+    // Width and height of enemy
+    this.width = 97;
+    this.height = 70;
     // Initial location
     this.initial_x = -101;
+    this.initial_y = (row * 83) - this.top_offset + 50 + Math.round((83 - this.height) / 2) ;
     // Variables to manage enemy location
     this.x = this.initial_x;
-    this.y = row * 83;
+    this.y = this.initial_y;
     // select random speed for enemy
     this.speed = randomSpeed();
     // The image/sprite for our enemies, this uses
@@ -36,24 +43,28 @@ Enemy.prototype.render = function() {
 
 // Reset the enemy position to reset the game.
 Enemy.prototype.reset = function() {
-    this.x = this.start_x;
+    this.x = this.initial_x;
+    this.y = this.initial_y;
 };
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
+// Player class
 var Player = function() {
+    // Image offset
+    this.top_offset = 60;
+    this.side_offset = 15;
+    // width & height of the player
+    this.width = 70;
+    this.height = 81;
     // Initial location
-    this.start_x = 202;
-    this.start_y = (5 * 83);
-    // Variables to manage enemy location
-    this.x = this.start_x;
-    this.y = this.start_y;
+    this.initial_x = 202;
+    this.initial_y = (5 * 83)- this.top_offset + 50;
+    // Variables to manage player location
+    this.x = this.initial_x;
+    this.y = this.initial_y;
     this.step_x = 101;
     this.step_y = 83;
-    // The image/sprite for our enemies, this uses
-    // a helper we've provided to easily load images
-    this.sprite = 'images/char-boy.png';
+    // The image/sprite for our player
+    this.sprite = "images/char-boy.png";
 };
 
 // Update the player's position, required method for game
