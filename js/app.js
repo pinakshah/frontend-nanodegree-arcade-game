@@ -1,15 +1,48 @@
 var Game = function() {
+    // Game - active /inactive
     this.active = true;
+    // Game total time in seconds
+    this.total_time = 10;
+    this.current_time = this.total_time;
 }
 
-Game.prototype.stop = function() {
+Game.prototype.stop = function(status) {
     this.active = false;
+    ctx.clearRect(0, 0, ctx.canvas.width, 50);
+    if(status === 1){
+        drawTitle(ctx, "Cogrates! You win. Play again.", ctx.canvas.width/2 , 32);
+    }else {
+        drawTitle(ctx, "Opps! You lost the game. Try again.", ctx.canvas.width/2 , 32);
+    }
+    drawInfo(ctx, "Enter 'SPACE' to restart the game.", ctx.canvas.width/2 , 48);
 }
 
 Game.prototype.start = function() {
-    this.active = true;
+    if(!this.active){
+        this.active = true;
+        this.current_time = this.total_time;
+        player.reset();
+        allEnemies.forEach(function(enemy) {
+            enemy.reset();
+        });
+        ctx.clearRect(0, 0, ctx.canvas.width, 50);
+    }
 }
 
+Game.prototype.update = function(dt) {
+    this.current_time -= dt;
+    // End game if current time is 0 or less than 0
+    if(this.active && this.current_time <= 0) {
+        this.stop(0);
+    }
+}
+
+Game.prototype.render = function() {
+    if(this.active) {
+        ctx.clearRect(0, 0, ctx.canvas.width, 50);
+        drawInfo(ctx, "REMAINIG TIME: " + Math.round(this.current_time) + "s", ctx.canvas.width , 48, "right");
+    }
+}
 
 // Enemies our player must avoid
 var Enemy = function(row) {
@@ -57,7 +90,7 @@ Enemy.prototype.update = function(dt) {
         && this.y < (player.y + player.height - 17)
         && this.y + this.height > player.y) {
         // The objects are touching
-        endGame(0);
+        game.stop(0);
     }
 };
 
@@ -72,6 +105,7 @@ Enemy.prototype.render = function() {
 Enemy.prototype.reset = function() {
     this.x = this.initial_x;
     this.y = this.initial_y;
+    this.speed = randomSpeed();
 };
 
 // Rocks our player must avoid
@@ -105,7 +139,7 @@ Rock.prototype.update = function(dt) {
         && this.y < (player.y + player.height - 17)
         && this.y + this.height > player.y) {
         // The objects are touching
-        endGame(0);
+        game.stop(0);
     }
 };
 
@@ -153,7 +187,7 @@ Player.prototype.handleInput = function(control) {
     if(control){
         switch (control) {
             case 'space':
-                restartGame();
+                game.start();
                 break;
             case 'left':
                 this.x = (this.x - this.step_x >= 0 ? this.x - this.step_x : this.x);
@@ -171,7 +205,7 @@ Player.prototype.handleInput = function(control) {
     }
     // Reset the game if player reaches the water
     if(this.y === -10){
-        endGame(1);
+        game.stop(1);
     }
 };
 
@@ -226,31 +260,6 @@ function randomNumber(max_number) {
     return Math.floor(Math.random() * max_number);
 }
 
-// This function is called when the player reaches the water.
-// It will reset the player position as well as all enemies position.
-function restartGame() {
-    if(!game.active){
-        game.start();
-        player.reset();
-        allEnemies.forEach(function(enemy) {
-            enemy.reset();
-        });
-        ctx.clearRect(0, 0, ctx.canvas.width, 50);
-    }
-}
-
-// This function is called when the player reaches the water.
-// It will freeze the player position as well as all enemies position.
-function endGame(status) {
-    game.stop();
-    if(status === 1){
-        drawTitle(ctx, "Cogrates! You win. Play again.", ctx.canvas.width/2 , 32);
-    }else {
-        drawTitle(ctx, "Opps! You lost the game. Try again.", ctx.canvas.width/2 , 32);
-    }
-    drawInfo(ctx, "Enter 'SPACE' to restart the game.", ctx.canvas.width/2 , 48);
-}
-
 function drawTitle(ctx, text, x, y){
     ctx.font = "24pt Impact";
     ctx.textAlign = "center";
@@ -261,9 +270,9 @@ function drawTitle(ctx, text, x, y){
     ctx.strokeText(text, x, y);
 }
 
-function drawInfo(ctx, text, x, y){
+function drawInfo(ctx, text, x, y, textAlign){
     ctx.font = "12pt Arial";
-    ctx.textAlign = "center";
+    ctx.textAlign = (textAlign !== "" ? textAlign : "center");
     ctx.fillStyle = "#000";
     ctx.fillText(text, x , y);
 }
