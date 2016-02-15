@@ -1,24 +1,26 @@
 var Game = function() {
+    // Status messages
+    this.messages = {
+        0: 'Congratulations! You win. Play again.',
+        1: 'Oops! You lost the game. Try again.',
+        2: 'Timeout! You lost the game. Try again.'
+    }
     // Game - active /inactive
     this.active = true;
     // Game total time in seconds
-    this.total_time = 10;
+    this.total_time = 120;
     this.current_time = this.total_time;
 }
 
 Game.prototype.stop = function(status) {
     this.active = false;
     ctx.clearRect(0, 0, ctx.canvas.width, 50);
-    if(status === 1){
-        drawTitle(ctx, "Cogrates! You win. Play again.", ctx.canvas.width/2 , 32);
-    }else {
-        drawTitle(ctx, "Opps! You lost the game. Try again.", ctx.canvas.width/2 , 32);
-    }
+    drawTitle(ctx, this.messages[status], ctx.canvas.width/2 , 32);
     drawInfo(ctx, "Enter 'SPACE' to restart the game.", ctx.canvas.width/2 , 48);
 }
 
 Game.prototype.start = function() {
-    if(!this.active){
+    if(!this.active) {
         this.active = true;
         this.current_time = this.total_time;
         player.reset();
@@ -33,7 +35,7 @@ Game.prototype.update = function(dt) {
     this.current_time -= dt;
     // End game if current time is 0 or less than 0
     if(this.active && this.current_time <= 0) {
-        this.stop(0);
+        this.stop(2);
     }
 }
 
@@ -77,7 +79,7 @@ Enemy.prototype.update = function(dt) {
     // which will ensure the game runs at the same speed for
     // all computers.
     this.x += (this.speed * dt);
-    if(this.x > ctx.canvas.width){
+    if(this.x > ctx.canvas.width) {
         // Reset to start position
         this.x = this.initial_x;
         // select random speed for enemy
