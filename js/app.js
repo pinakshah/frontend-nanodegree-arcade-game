@@ -50,11 +50,22 @@ Enemy.prototype.update = function(dt) {
         // select random speed for enemy
         this.speed = randomSpeed();
     }
+
+    // Handles enemy collision with the player
+    if (this.x + this.side_offset - player.side_offset < player.x + player.width
+        && this.x + this.width + this.side_offset > player.x + player.side_offset
+        && this.y < (player.y + player.height - 17)
+        && this.y + this.height > player.y) {
+        // The objects are touching
+        endGame(0);
+    }
 };
 
 // Draw the enemy on the screen, required method for game
 Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+    // display enemy area on the canvas with border
+    //ctx.strokeRect(this.x + (101 - this.width)/2, this.y + this.top_offset, this.width, this.height);
 };
 
 // Reset the enemy position to reset the game.
@@ -87,6 +98,15 @@ Rock.prototype.update = function(dt) {
     // You should multiply any movement by the dt parameter
     // which will ensure the game runs at the same speed for
     // all computers.
+
+    //Handles rock collision with the player
+    if (this.x + this.side_offset - player.side_offset < player.x + player.width
+        && this.x + this.width + this.side_offset > player.x + player.side_offset
+        && this.y < (player.y + player.height - 17)
+        && this.y + this.height > player.y) {
+        // The objects are touching
+        endGame(0);
+    }
 };
 
 // Reset the rock position to reset the game.
@@ -124,6 +144,8 @@ Player.prototype.update = function() {
 // Draw the player on the screen, required method for game
 Player.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+    // display player area on the canvas with border
+    //ctx.strokeRect(this.x + (this.step_x - this.width)/2, this.y + 60, this.width, this.height);
 };
 
 // Handle users inputs to move player left/right/up/down within screen size.
