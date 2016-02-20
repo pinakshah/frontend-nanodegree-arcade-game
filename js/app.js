@@ -10,6 +10,7 @@ var Game = function() {
     // total time in seconds
     this.total_time = 120;
     this.current_time = this.total_time;
+    this.total_gems = 20;
 }
 
 Game.prototype.stop = function(status) {
@@ -19,14 +20,18 @@ Game.prototype.stop = function(status) {
     drawInfo(ctx, "Enter 'SPACE' to restart the game.", ctx.canvas.width/2 , 48);
 }
 
+Game.prototype.reset = function(status) {
+    this.current_time = this.total_time;
+    this.active = true;
+}
+
 Game.prototype.start = function() {
     if(!this.active) {
-        this.active = true;
-        this.current_time = this.total_time;
-        player.reset();
+        game.reset();
         allEnemies.forEach(function(enemy) {
             enemy.reset();
         });
+        player.reset();
         ctx.clearRect(0, 0, ctx.canvas.width, 50);
     }
 }
@@ -43,6 +48,7 @@ Game.prototype.render = function() {
     if(this.active) {
         ctx.clearRect(0, 0, ctx.canvas.width, 50);
         drawInfo(ctx, "Remaining Time: " + secondsToHMS(this.current_time), ctx.canvas.width , 48, "right");
+        drawInfo(ctx, "Score: " + player.gem_counter + " / " + this.total_gems, 0 , 48, "left");
     }
 }
 
@@ -109,6 +115,7 @@ Enemy.prototype.reset = function() {
 
 // Rocks our player must avoid
 var Rock = function(row) {
+    this.row = row;
     // Position for Rock
     this.top_offset = 66;
     this.side_offset = 7;
@@ -143,6 +150,52 @@ Rock.prototype.reset = function() {
     this.x = randomNumber(404);
 };
 
+var GEM_TYPES = ['Blue', 'Green', 'Orange'];
+// Gems our player will collect
+var Gem = function() {
+    this.row = randomNumber(4);
+    this.gem_index = randomNumber(3);
+    this.type = GEM_TYPES[this.gem_index];
+    this.point = GEM_POINTS[this.gem_index];
+
+    // Position for Rock
+    this.top_offset = 58;
+    this.side_offset = 3;
+    // width & height
+    this.width = 95;
+    this.height = 105;
+    // Variables to manage gem location
+    this.x = randomNumber(404);
+    this.y = (this.row * 83) - this.top_offset + 50;
+    // The image/sprite for our enemies, this uses
+    // a helper we've provided to easily load images
+    this.sprite = 'images/Gem ' + this.type + '.png';
+};
+
+Gem.prototype.update = function(dt) {
+    if(!game.active) {
+        return;
+    }
+
+    //Handles gem collision with the player
+    if(hasCollision(player, this)){
+        gems.splice(gems.indexOf(this), 1);
+        // Collect the gem
+        ctx.clearRect(this.x, this.y, this.width, this.height);
+        // increment the gem counter
+        player.gem_counter += 1;
+        // Create a new gem.
+        gems.push(new Gem());
+    }
+};
+
+// Draw the gem on the screen, required method for game
+Gem.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+    // ctx.strokeRect(this.x + (101 - this.width)/2, this.y + this.top_offset,
+    //     this.width, this.height);
+};
+
 // Player class
 var Player = function() {
     // Image offset
@@ -159,9 +212,11 @@ var Player = function() {
     this.y = this.initial_y;
     this.step_x = 101;
     this.step_y = 83;
-    // Movement of player
+    // Movement of player based on the user input
     this.move_x = -1;
     this.move_y = -1;
+    // Gem collection count
+    this.gem_counter = 0;
     // The image/sprite for our player
     this.sprite = "images/char-boy.png";
 };
@@ -183,7 +238,7 @@ Player.prototype.update = function() {
     }
 
     // Reset the game if player reaches the water
-    if(this.y === -10){
+    if(this.y === -10 && this.gem_counter >= game.total_gems) {
         game.stop(0);
     }
 };
@@ -225,6 +280,7 @@ Player.prototype.handleInput = function(control) {
 Player.prototype.reset = function() {
     this.x = this.initial_x;
     this.y = this.initial_y;
+    this.gem_counter = 0;
 };
 
 // Now instantiate your objects.
@@ -242,6 +298,10 @@ setTimeout(function() {
     allEnemies.push(new Enemy(2));
     allEnemies.push(new Enemy(3));
 }, 3000);
+
+var gems = [];
+gems.push(new Gem());
+gems.push(new Gem());
 
 // Place the player object in a variable called player
 var player = new Player();
