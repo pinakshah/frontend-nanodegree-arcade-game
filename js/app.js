@@ -7,7 +7,7 @@ var Game = function() {
     }
     // Game - active /inactive
     this.active = true;
-    // Game total time in seconds
+    // total time in seconds
     this.total_time = 120;
     this.current_time = this.total_time;
 }
@@ -42,7 +42,7 @@ Game.prototype.update = function(dt) {
 Game.prototype.render = function() {
     if(this.active) {
         ctx.clearRect(0, 0, ctx.canvas.width, 50);
-        drawInfo(ctx, "REMAINIG TIME: " + Math.round(this.current_time) + "s", ctx.canvas.width , 48, "right");
+        drawInfo(ctx, "Remaining Time: " + secondsToHMS(this.current_time), ctx.canvas.width , 48, "right");
     }
 }
 
@@ -87,12 +87,8 @@ Enemy.prototype.update = function(dt) {
     }
 
     // Handles enemy collision with the player
-    if (this.x + this.side_offset - player.side_offset < player.x + player.width
-        && this.x + this.width + this.side_offset > player.x + player.side_offset
-        && this.y < (player.y + player.height - 17)
-        && this.y + this.height > player.y) {
-        // The objects are touching
-        game.stop(0);
+    if(hasCollision(player, this)){
+        game.stop(1); // End game
     }
 };
 
@@ -100,7 +96,8 @@ Enemy.prototype.update = function(dt) {
 Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
     // display enemy area on the canvas with border
-    //ctx.strokeRect(this.x + (101 - this.width)/2, this.y + this.top_offset, this.width, this.height);
+    // ctx.strokeRect(this.x + (101 - this.width)/2, this.y + this.top_offset,
+    //     this.width, this.height);
 };
 
 // Reset the enemy position to reset the game.
@@ -114,7 +111,7 @@ Enemy.prototype.reset = function() {
 var Rock = function(row) {
     // Position for Rock
     this.top_offset = 66;
-    this.side_offset = 6;
+    this.side_offset = 7;
     // width & height
     this.width = 88;
     this.height = 88;
@@ -131,17 +128,13 @@ Rock.prototype = Object.create(Enemy.prototype);
 // Update the rock's position, required method for game
 // Parameter: dt, a time delta between ticks
 Rock.prototype.update = function(dt) {
-    // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
-    // all computers.
+    if(!game.active) {
+        return;
+    }
 
     //Handles rock collision with the player
-    if (this.x + this.side_offset - player.side_offset < player.x + player.width
-        && this.x + this.width + this.side_offset > player.x + player.side_offset
-        && this.y < (player.y + player.height - 17)
-        && this.y + this.height > player.y) {
-        // The objects are touching
-        game.stop(0);
+    if(hasCollision(player, this)){
+        game.stop(1); // End game
     }
 };
 
@@ -154,7 +147,7 @@ Rock.prototype.reset = function() {
 var Player = function() {
     // Image offset
     this.top_offset = 60;
-    this.side_offset = 15;
+    this.side_offset = 17;
     // width & height of the player
     this.width = 70;
     this.height = 81;
@@ -166,48 +159,65 @@ var Player = function() {
     this.y = this.initial_y;
     this.step_x = 101;
     this.step_y = 83;
+    // Movement of player
+    this.move_x = -1;
+    this.move_y = -1;
     // The image/sprite for our player
     this.sprite = "images/char-boy.png";
 };
 
 // Update the player's position, required method for game
 Player.prototype.update = function() {
-    // TODO update the player location
+    if(!game.active) {
+        return;
+    }
+    // Update the player location
+    if(this.move_x !== -1) {
+        this.x = this.move_x;
+        this.move_x = -1;
+    }
 
-    // TODO Handles collision with the Enemies
+    if(this.move_y !== -1) {
+        this.y = this.move_y;
+        this.move_y = -1;
+    }
+
+    // Reset the game if player reaches the water
+    if(this.y === -10){
+        game.stop(0);
+    }
 };
 
 // Draw the player on the screen, required method for game
 Player.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
     // display player area on the canvas with border
-    //ctx.strokeRect(this.x + (this.step_x - this.width)/2, this.y + 60, this.width, this.height);
+    // ctx.strokeRect(this.x + (this.step_x - this.width)/2, this.y + 60,
+    //     this.width, this.height);
 };
 
 // Handle users inputs to move player left/right/up/down within screen size.
 Player.prototype.handleInput = function(control) {
-    if(control){
-        switch (control) {
-            case 'space':
-                game.start();
-                break;
-            case 'left':
-                this.x = (this.x - this.step_x >= 0 ? this.x - this.step_x : this.x);
-                break;
-            case 'up':
-                this.y = (this.y - this.step_y >= -10 ? this.y - this.step_y : this.y);
-                break;
-            case 'right':
-                this.x = (this.x + this.step_x < ctx.canvas.width ? this.x + this.step_x : this.x);
-                break;
-            case 'down':
-                this.y = (this.y + this.step_y < 488 ? this.y + this.step_y : this.y);
-                break;
-        }
+    if(!game.active && !control) {
+        return;
     }
-    // Reset the game if player reaches the water
-    if(this.y === -10){
-        game.stop(1);
+
+    switch (control) {
+        case 'space':
+            game.start();
+            break;
+        case 'left':
+            this.move_x = (this.x - this.step_x >= 0 ? this.x - this.step_x : -1);
+            break;
+        case 'up':
+            this.move_y = (this.y - this.step_y >= -10 ? this.y - this.step_y : -1);
+            break;
+        case 'right':
+            this.move_x = (this.x + this.step_x < ctx.canvas.width ? this.x + this.step_x : -1);
+            break;
+        case 'down':
+            this.move_y = (this.y + this.step_y < 488 ? this.y + this.step_y : -1);
+            break;
     }
 };
 
@@ -251,6 +261,20 @@ document.addEventListener('keyup', function(e) {
     player.handleInput(allowedKeys[e.keyCode]);
 });
 
+/* This function is used to check the collision of the player with enemy.
+ * This will check player with single and enemy and return true if collision
+ * occurs otherwise return false.
+ */
+function hasCollision(player, emeny) {
+    if (emeny.x + emeny.side_offset < player.x + player.width + player.side_offset
+        && emeny.x + emeny.width + emeny.side_offset > player.x + player.side_offset
+        && emeny.y < (player.y + player.height - 17)
+        && emeny.y + emeny.height > player.y) {
+            return true;
+    }
+    return false;
+}
+
 // This function is used to get the random speed for the enemy.
 function randomSpeed() {
     return randomNumber(200) + 20;
@@ -262,6 +286,7 @@ function randomNumber(max_number) {
     return Math.floor(Math.random() * max_number);
 }
 
+// This function is used to display title text on the canvas.
 function drawTitle(ctx, text, x, y){
     ctx.font = "24pt Impact";
     ctx.textAlign = "center";
@@ -272,9 +297,22 @@ function drawTitle(ctx, text, x, y){
     ctx.strokeText(text, x, y);
 }
 
+// This function is used to display info text on the canvas.
 function drawInfo(ctx, text, x, y, textAlign){
     ctx.font = "12pt Arial";
     ctx.textAlign = (textAlign !== "" ? textAlign : "center");
     ctx.fillStyle = "#000";
     ctx.fillText(text, x , y);
+}
+
+/* This function is used to convert seconds to string format - HH:MM:SS.
+ * This function is used to show the time string
+ */
+function secondsToHMS(d) {
+    d = Number(d);
+    var h = Math.floor(d / (60 * 60));
+    var m = Math.floor(d % (60 * 60) / 60);
+    var s = Math.floor(d % (60 * 60) % 60);
+    return ((h > 0 ? h + ":" + (m < 10 ? "0" : "") : "") + m + ":" +
+        (s < 10 ? "0" : "") + s);
 }
