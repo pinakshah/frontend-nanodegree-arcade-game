@@ -119,7 +119,7 @@ Enemy.prototype.update = function(dt) {
     }
 
     // Handles enemy collision with the player
-    if(hasCollision(player, this)) {
+    if(player.hasCollision(this)) {
         game.stop(1); // End game
     }
 };
@@ -184,7 +184,7 @@ Rock.prototype.update = function(dt) {
     }
 
     //Handles rock collision with the player
-    if(hasCollision(player, this)) {
+    if(player.hasCollision(this)) {
         game.stop(1); // End game
     }
 };
@@ -230,7 +230,7 @@ Gem.prototype.update = function(dt) {
     }
 
     //Handles gem collision with the player
-    if(hasCollision(player, this)) {
+    if(player.hasCollision(this)) {
         gems.splice(gems.indexOf(this), 1);
         // Collect the gem
         ctx.clearRect(this.x, this.y, this.width, this.height);
@@ -341,6 +341,23 @@ Player.prototype.handleInput = function(control) {
 };
 
 /**
+ * @description This function is used to check the collision of the player with
+ * enemy, rock and gems. This will check player with single game object and
+ * return true if collision occurs otherwise return false.
+ * @parameter {object} object - Enemy/Rock/Gem
+ * @returns {boolean} true/false - if has collision or not.
+ */
+Player.prototype.hasCollision = function(object) {
+    if (object.x + object.side_offset < this.x + this.width + this.side_offset
+        && object.x + object.width + object.side_offset > this.x + this.side_offset
+        && object.y < (this.y + this.height - 17)
+        && object.y + this.height > this.y) {
+            return true;
+    }
+    return false;
+};
+
+/**
  * @description Reset the player position to reset the game.
  */
 Player.prototype.reset = function() {
@@ -387,22 +404,6 @@ document.addEventListener('keyup', function(e) {
 
     player.handleInput(allowedKeys[e.keyCode]);
 });
-
-/**
- * @description This function is used to check the collision of the player with
- * enemy. This will check player with single and enemy and return true if
- * collision occurs otherwise return false.
- * @returns {boolean} true/false - if has collision or not.
- */
-function hasCollision(player, emeny) {
-    if (emeny.x + emeny.side_offset < player.x + player.width + player.side_offset
-        && emeny.x + emeny.width + emeny.side_offset > player.x + player.side_offset
-        && emeny.y < (player.y + player.height - 17)
-        && emeny.y + emeny.height > player.y) {
-            return true;
-    }
-    return false;
-}
 
 /**
  * @description This function is used to get the random number for the
